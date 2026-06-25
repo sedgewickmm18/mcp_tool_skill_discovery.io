@@ -710,27 +710,28 @@ flowchart LR
         createTokenChart();
     }
 
-    // Initialize Mermaid diagrams on the initial slide
-    document.querySelectorAll('.mermaid').forEach((element) => {
-        mermaid.run({
-            nodes: [element]
-        });
-    });
-
     // Modal functionality for mermaid diagrams
     const modal = document.getElementById('mermaidModal');
     const modalContent = document.getElementById('mermaidModalContent');
     const closeBtn = document.querySelector('.image-modal-close');
     
     // Store original mermaid content to avoid re-rendering issues
+    // This must be done BEFORE mermaid.run() is called
     const originalMermaidContent = new Map();
-    
-    // Initialize mermaid containers and store original content
     document.querySelectorAll('.mermaid-container').forEach(container => {
         const mermaidElement = container.querySelector('.mermaid');
         if (mermaidElement) {
-            originalMermaidContent.set(container.id, mermaidElement.innerHTML);
+            // Get the text content (mermaid source code) before rendering
+            const sourceCode = mermaidElement.textContent.trim();
+            originalMermaidContent.set(container.id, sourceCode);
         }
+    });
+
+    // Initialize Mermaid diagrams on the initial slide
+    document.querySelectorAll('.mermaid').forEach((element) => {
+        mermaid.run({
+            nodes: [element]
+        });
     });
     
     // Make mermaid containers clickable
@@ -740,10 +741,10 @@ flowchart LR
             const originalContent = originalMermaidContent.get(containerId);
             
             if (originalContent) {
-                // Create a fresh mermaid element with the original content
+                // Create a fresh mermaid element with the original source code
                 const freshMermaid = document.createElement('div');
                 freshMermaid.className = 'mermaid';
-                freshMermaid.innerHTML = originalContent;
+                freshMermaid.textContent = originalContent; // Use textContent to set the source code
                 
                 // Clear previous content and add new content
                 modalContent.innerHTML = '';
