@@ -696,11 +696,17 @@ flowchart LR
             createTokenChart();
         }
         
-        // Initialize Mermaid diagrams on the new slide
-        event.currentSlide.querySelectorAll('.mermaid').forEach((element) => {
-            mermaid.run({
-                nodes: [element]
-            });
+        // Initialize Mermaid diagrams on the new slide using requestAnimationFrame
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                event.currentSlide.querySelectorAll('.mermaid').forEach((element) => {
+                    mermaid.run({
+                        nodes: [element]
+                    }).catch(error => {
+                        console.error('Error rendering mermaid diagram:', error);
+                    });
+                });
+            }, 100);
         });
     });
 
@@ -727,11 +733,18 @@ flowchart LR
         }
     });
 
-    // Initialize Mermaid diagrams on the initial slide
-    document.querySelectorAll('.mermaid').forEach((element) => {
-        mermaid.run({
-            nodes: [element]
-        });
+    // Initialize Mermaid diagrams on the initial slide using requestAnimationFrame
+    // This ensures the DOM is fully ready before mermaid tries to render
+    requestAnimationFrame(() => {
+        setTimeout(() => {
+            document.querySelectorAll('.mermaid').forEach((element) => {
+                mermaid.run({
+                    nodes: [element]
+                }).catch(error => {
+                    console.error('Error rendering mermaid diagram:', error);
+                });
+            });
+        }, 100);
     });
     
     // Make mermaid containers clickable
