@@ -699,13 +699,7 @@ flowchart LR
         // Initialize Mermaid diagrams on the new slide using requestAnimationFrame
         requestAnimationFrame(() => {
             setTimeout(() => {
-                event.currentSlide.querySelectorAll('.mermaid').forEach((element) => {
-                    mermaid.run({
-                        nodes: [element]
-                    }).catch(error => {
-                        console.error('Error rendering mermaid diagram:', error);
-                    });
-                });
+                renderMermaidInSlide(event.currentSlide);
             }, 100);
         });
     });
@@ -733,17 +727,34 @@ flowchart LR
         }
     });
 
+    // Helper: reset and re-render mermaid elements that may have been skipped
+    // because they were in a hidden slide when the initial render ran.
+    function renderMermaidInSlide(slide) {
+        slide.querySelectorAll('.mermaid').forEach((element) => {
+            // If mermaid already rendered (and possibly produced a broken SVG
+            // because the element was hidden), reset it so it re-renders.
+            if (element.getAttribute('data-processed')) {
+                // Restore original source so mermaid can parse it again.
+                const container = element.closest('.mermaid-container');
+                const containerId = container && container.id;
+                const source = containerId && originalMermaidContent.get(containerId);
+                if (source) {
+                    element.removeAttribute('data-processed');
+                    element.innerHTML = '';
+                    element.textContent = source;
+                }
+            }
+            mermaid.run({ nodes: [element] }).catch(error => {
+                console.error('Error rendering mermaid diagram:', error);
+            });
+        });
+    }
+
     // Initialize Mermaid diagrams on the initial slide using requestAnimationFrame
     // This ensures the DOM is fully ready before mermaid tries to render
     requestAnimationFrame(() => {
         setTimeout(() => {
-            document.querySelectorAll('.mermaid').forEach((element) => {
-                mermaid.run({
-                    nodes: [element]
-                }).catch(error => {
-                    console.error('Error rendering mermaid diagram:', error);
-                });
-            });
+            renderMermaidInSlide(Reveal.getCurrentSlide() || document);
         }, 100);
     });
     
