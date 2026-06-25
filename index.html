@@ -722,17 +722,32 @@ flowchart LR
     const modalContent = document.getElementById('mermaidModalContent');
     const closeBtn = document.querySelector('.image-modal-close');
     
+    // Store original mermaid content to avoid re-rendering issues
+    const originalMermaidContent = new Map();
+    
+    // Initialize mermaid containers and store original content
+    document.querySelectorAll('.mermaid-container').forEach(container => {
+        const mermaidElement = container.querySelector('.mermaid');
+        if (mermaidElement) {
+            originalMermaidContent.set(container.id, mermaidElement.innerHTML);
+        }
+    });
+    
     // Make mermaid containers clickable
     document.querySelectorAll('.mermaid-container').forEach(container => {
         container.addEventListener('click', function(e) {
-            const mermaidElement = this.querySelector('.mermaid');
-            if (mermaidElement) {
-                // Clone the mermaid diagram content
-                const clonedContent = mermaidElement.cloneNode(true);
+            const containerId = this.id;
+            const originalContent = originalMermaidContent.get(containerId);
+            
+            if (originalContent) {
+                // Create a fresh mermaid element with the original content
+                const freshMermaid = document.createElement('div');
+                freshMermaid.className = 'mermaid';
+                freshMermaid.innerHTML = originalContent;
                 
                 // Clear previous content and add new content
                 modalContent.innerHTML = '';
-                modalContent.appendChild(clonedContent);
+                modalContent.appendChild(freshMermaid);
                 
                 // Make the modal content container larger
                 modalContent.style.width = '90vw';
@@ -743,10 +758,10 @@ flowchart LR
                 
                 // Re-render the mermaid diagram in the modal
                 mermaid.run({
-                    nodes: [clonedContent]
+                    nodes: [freshMermaid]
                 }).then(() => {
-                    // Make the cloned diagram larger for better visibility
-                    const svgElement = clonedContent.querySelector('svg');
+                    // Make the diagram larger for better visibility
+                    const svgElement = freshMermaid.querySelector('svg');
                     if (svgElement) {
                         svgElement.style.width = '100%';
                         svgElement.style.height = 'auto';
@@ -764,6 +779,8 @@ flowchart LR
                             svgElement.style.aspectRatio = `${width}/${height}`;
                         }
                     }
+                }).catch(error => {
+                    console.error('Error rendering mermaid in modal:', error);
                 });
                 
                 // Show the modal
